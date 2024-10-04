@@ -31,25 +31,34 @@ def detectar_y_reconocer_placa(imagen):
 
             # Reconocer caracteres
             texto = pytesseract.image_to_string(placa_thresh, config='--psm 8')
-            return texto.strip(), placa_region
+            return texto.strip(), placa_region, (x, y, w, h)
 
-    return None, None
+    return None, None, None
 
 # Captura de video
-cap = cv2.VideoCapture("video.mp4")  # Cambia 0 por la ruta del video si no es de la cámara
+cap = cv2.VideoCapture(0)  # Cambia 0 por la ruta del video si no es de la cámara
 
 while True:
     ret, frame = cap.read()
     if not ret:
         break
 
-    texto, placa_region = detectar_y_reconocer_placa(frame)
+    texto, placa_region, rectangulo = detectar_y_reconocer_placa(frame)
 
     if texto:
+        # Dibuja un rectángulo alrededor de la placa detectada
+        x, y, w, h = rectangulo
+        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        
+        # Muestra el texto de la placa
         cv2.putText(frame, f'Placa: {texto}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
         
     # Guarda la imagen en lugar de mostrar
     cv2.imwrite("captura.jpg", frame)
+    print(texto)
+
+    # Muestra la imagen (puedes comentarlo si solo quieres guardar)
+    cv2.imshow("Reconocimiento de Placas", frame)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
